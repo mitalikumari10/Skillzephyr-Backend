@@ -1,0 +1,57 @@
+service: mitali-sls
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  role: arn:aws:iam::546628620317:role/LabRole
+  region: us-east-1
+
+functions:
+  createItem:
+    handler: handler.create
+    events:
+      - http:
+          path: items
+          method: get
+          cors: true
+
+  registerUser:
+    handler: handler.registerUser
+    events:
+      - http:
+          path: register
+          method: post
+          cors: true
+
+  loginUser:
+    handler: handler.loginUser
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
+
+  validateToken:
+    handler: handler.validateToken
+    events:
+      - http:
+          path: validate
+          method: post
+          cors: true
+
+  createPaymentOrder:
+    handler: payment.createPaymentOrder
+    events:
+      - http:
+          path: create-payment-order
+          method: post
+          cors: true
+
+  verifyPayment:
+    handler: payment.verifyPayment
+    events:
+      - http:
+          path: verify-payment
+          method: post
+          cors: true
