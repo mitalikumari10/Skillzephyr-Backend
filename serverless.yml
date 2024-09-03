@@ -8,6 +8,38 @@ provider:
   region: us-east-1
 
 functions:
+  profile:
+    handler: handler.profile
+    events:
+      - http:
+          path: profile
+          method: get
+          cors: true
+
+  createPaymentOrder:
+    handler: handler.createPaymentOrder
+    events:
+      - http:
+          path: create-payment-order
+          method: post
+          cors: true
+
+  verifyPayment:
+    handler: handler.verifyPayment
+    events:
+      - http:
+          path: verify-payment
+          method: post
+          cors: true
+
+  updateProfile:
+    handler: handler.updateProfile
+    events:
+      - http:
+          path: update-profile
+          method: post
+          cors: true
+
   createItem:
     handler: handler.create
     events:
@@ -37,21 +69,5 @@ functions:
     events:
       - http:
           path: validate
-          method: post
-          cors: true
-
-  createPaymentOrder:
-    handler: payment.createPaymentOrder
-    events:
-      - http:
-          path: create-payment-order
-          method: post
-          cors: true
-
-  verifyPayment:
-    handler: payment.verifyPayment
-    events:
-      - http:
-          path: verify-payment
           method: post
           cors: true
