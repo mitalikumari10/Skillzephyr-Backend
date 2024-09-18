@@ -32,19 +32,20 @@ functions:
           method: post
           cors: true
 
-  updateProfile:
-    handler: handler.updateProfile
+
+  renderhome:
+    handler: handler.homepage
     events:
       - http:
-          path: update-profile
-          method: post
+          path: homepage
+          method: get
           cors: true
 
-  createItem:
-    handler: handler.create
+  rendercourse:
+    handler: handler.coursepage
     events:
       - http:
-          path: items
+          path: course
           method: get
           cors: true
 
@@ -69,5 +70,21 @@ functions:
     events:
       - http:
           path: validate
+          method: post
+          cors: true
+          
+  checkCoursePurchase:
+    handler: handler.checkCoursePurchase
+    events:
+      - http:
+          path: check-course-purchase
+          method: post
+          cors: true
+    
+  updateUserCourses:
+    handler: handler.updateUserCourses
+    events:
+      - http:
+          path: updateUserCourses
           method: post
           cors: true
