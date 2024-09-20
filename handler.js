@@ -307,3 +307,103 @@ exports.checkCoursePurchase = async (event) => {
     };
   }
 };
+
+exports.createPaymentOrder = async (event) => {
+  const { amount, currency, receipt } = JSON.parse(event.body);
+  const options = {
+      amount: amount * 100, // Amount is in smallest unit, so multiply by 100
+      currency,
+      receipt,
+  };
+  try {
+      const order = await razorpay.orders.create(options);
+      return {
+          statusCode: 200,
+          headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': 'Content-Type',
+              'Access-Control-Allow-Methods': 'POST',
+          },
+          body: JSON.stringify({ orderId: order.id }),
+      };
+  } catch (error) {
+      console.error('Error creating Razorpay order:', error);
+      return {
+          statusCode: 500,
+          headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': 'Content-Type',
+              'Access-Control-Allow-Methods': 'POST',
+          },
+          body: JSON.stringify({ message: 'Error creating Razorpay order', error: error.message }),
+      };
+  }
+};
+
+exports.verifyPayment = async (event) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, username, courseId } = JSON.parse(event.body);
+
+  const generatedSignature = crypto.createHmac('sha256', razorpay.key_secret)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest('hex');
+
+  if (generatedSignature !== razorpay_signature) {
+    return {
+      statusCode: 400,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST',
+      },
+      body: JSON.stringify({ message: 'Invalid payment signature' }),
+    };
+  }
+
+  try {
+    // Fetch the course details using the courseId
+    const courseParams = {
+      TableName: 'SkillzephyrTable',
+      Key: { courseId: courseId },
+      ProjectionExpression: 'courseDetails.#n', // Only fetching the course name
+      ExpressionAttributeNames: { '#n': 'name' }
+    };
+
+    const courseData = await dynamoDB.get(courseParams).promise();
+    const courseName = courseData.Item.courseDetails.name;
+
+    // Update the user's profile with the purchased course details
+    const params = {
+      TableName: 'Users',
+      Key: { username: username },
+      UpdateExpression: 'SET coursesPurchased = list_append(if_not_exists(coursesPurchased, :emptyList), :newCourse)',
+      ExpressionAttributeValues: {
+        ':emptyList': [],
+        ':newCourse': [{ courseId: courseId, courseName: courseName }],
+      },
+      ReturnValues: 'UPDATED_NEW',
+    };
+
+    const updateResult = await dynamoDB.update(params).promise();
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST',
+      },
+      body: JSON.stringify({ message: 'Payment verified and course added to user profile', updateResult }),
+    };
+  } catch (error) {
+    console.error('Error updating user profile after payment:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST',
+      },
+      body: JSON.stringify({ message: 'Payment verification failed', error: error.message }),
+    };
+  }
+};
