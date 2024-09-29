@@ -8,14 +8,6 @@ provider:
   region: us-east-1
 
 functions:
-  profile:
-    handler: handler.profile
-    events:
-      - http:
-          path: profile
-          method: get
-          cors: true
-
   createPaymentOrder:
     handler: handler.createPaymentOrder
     events:
@@ -46,7 +38,7 @@ functions:
     events:
       - http:
           path: course
-          method: get
+          method: post
           cors: true
 
   registerUser:
@@ -64,27 +56,36 @@ functions:
           path: login
           method: post
           cors: true
-
-  validateToken:
-    handler: handler.validateToken
+          
+  logoutUser:
+    handler: handler.logouthandler
     events:
       - http:
-          path: validate
+          path: logout
+          method: post
+          cors: true
+
+  checkloginStatus:
+    handler: handler.check
+    events:
+      - http:
+          path: fetching
           method: post
           cors: true
           
-  checkCoursePurchase:
-    handler: handler.checkCoursePurchase
+  generatePresignedUrl:
+    handler: handler.generatePresignedUrl
     events:
       - http:
-          path: check-course-purchase
+          path: videos/presigned-url
           method: post
-          cors: true
-    
-  updateUserCourses:
-    handler: handler.updateUserCourses
+          cors: true      
+
+  removeExpiredCourses:
+    handler: handler.removeExpiredCourses
     events:
       - http:
-          path: updateUserCourses
+          path: remove-expired-courses
           method: post
           cors: true
+      - schedule: rate(1 day)        
